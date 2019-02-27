@@ -14,100 +14,92 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Mobx with Firestore Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: CounterExample(),
+      home: MobxFirestore(),
     );
   }
 }
 
-class CounterExample extends StatefulWidget {
-  const CounterExample();
+class MobxFirestore extends StatefulWidget {
+  const MobxFirestore();
 
   @override
-  _CounterExampleState createState() => _CounterExampleState();
+  _MobxFirestoreState createState() => _MobxFirestoreState();
 }
 
-class _CounterExampleState extends State<CounterExample> {
+class _MobxFirestoreState extends State<MobxFirestore> {
   final TextEditingController _firstNamecont = TextEditingController();
   final TextEditingController _lastNamecont = TextEditingController();
-  String _firstName;
-  String _lastName;
+  FocusNode _firstFocusNode = new FocusNode();
+  FocusNode _lastFocusNode = new FocusNode();
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('MobX Counter'),
-          actions: <Widget>[
-            Observer(
-              builder: (_) {
-                return IconButton(
-                  icon: const Icon(Icons.account_box),
-                  color: login.loginStatus.value ? Colors.green : Colors.red,
-                  onPressed: () {
-                    login.updatedLoginStatus
-                        ? login.logoutAccount()
-                        : login.googleLogin();
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-        body: Column(
-          children: <Widget>[
-            TextField(
-              controller: _firstNamecont,
-              /* onChanged: (val) {
-                  _firstNamecont.text = val;
-                  print('firstName: ${_firstNamecont.text}');
-                */
-            ),
-            TextField(
-              controller: _lastNamecont,
-              /* onChanged: (val) {
-                  _lastNamecont.text = val;
-                  print('lastName: ${_lastNamecont.text}');
-                } */
-            ),
-            SizedBox(
-              height: 30,
-            ),
-            RaisedButton(
-              child: Text('Push to Firestore'),
-              onPressed: () {
-                var fullname =
-                    Fullname(_firstNamecont.text, _lastNamecont.text);
-                firestore.pushToFirestore(fullname);
-
-                print('${_firstNamecont.text}---${_lastNamecont.text}');
-              },
-            ),
-            SizedBox(
-              height: 30,
-            ),
-            FirestoreListView(),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            firestore.getFromFirestore();
-          },
-          tooltip: 'Increment',
-          child: const Icon(Icons.add),
-        ),
-      );
+  Widget build(BuildContext context) {
+    firestore.getFromFirestore();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('MobX Counter'),
+        actions: <Widget>[
+          Observer(
+            builder: (_) {
+              return IconButton(
+                icon: const Icon(Icons.account_box),
+                color: login.loginStatus.value ? Colors.green : Colors.red,
+                onPressed: () {
+                  login.updatedLoginStatus
+                      ? login.logoutAccount()
+                      : login.googleLogin();
+                },
+              );
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: <Widget>[
+          TextField(
+            controller: _firstNamecont,
+            focusNode: _firstFocusNode,
+          ),
+          TextField(
+            controller: _lastNamecont,
+            focusNode: _lastFocusNode,
+          ),
+          SizedBox(
+            height: 30,
+          ),
+          RaisedButton(
+            child: Text('Push to Firestore'),
+            onPressed: () {
+              var fullname = Fullname(_firstNamecont.text, _lastNamecont.text);
+              firestore.pushToFirestore(fullname);
+              _firstNamecont.clear();
+              _lastNamecont.clear();
+              _firstFocusNode
+                  .unfocus(); //Just to get rid of annoying onScreen keyboard
+              _lastFocusNode
+                  .unfocus(); //Just to get rid of annoying onScreen keyboard
+              //  print('${_firstNamecont.text}---${_lastNamecont.text}');
+            },
+          ),
+          SizedBox(
+            height: 30,
+          ),
+          FirestoreListView(),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          firestore.getFromFirestore();
+        },
+        tooltip: 'Increment',
+        child: const Icon(Icons.publish),
+      ),
+    );
+  }
 }
 
 class FirestoreListView extends StatelessWidget {
@@ -126,6 +118,9 @@ class FirestoreListView extends StatelessWidget {
               return Dismissible(
                 key: Key(firestore.fullNames.value[index].documentID),
                 direction: DismissDirection.startToEnd,
+                background: Container(
+                  color: Colors.redAccent.shade200,
+                ),
                 onDismissed: (direction) {
                   if (direction == DismissDirection.startToEnd) {
                     firestore

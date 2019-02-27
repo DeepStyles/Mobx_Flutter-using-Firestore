@@ -31,10 +31,10 @@ abstract class MobxfirestoreBase implements Store {
       if (snap.documents.length > 0) {
         for (var doc in snap.documents) {
           fullnames.add(Fullname.fromfirestoresnapshot(doc));
-          print('fullname docID: ${doc.documentID}');
+          // print('fullname docID: ${doc.documentID}');
         }
 
-        print('fullnames length: ${fullnames.length}');
+        //print('fullnames length: ${fullnames.length}');
 
         fullNames = ObservableFuture<List<Fullname>>.value(fullnames);
       }
