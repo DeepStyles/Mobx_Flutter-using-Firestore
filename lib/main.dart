@@ -41,7 +41,7 @@ class _MobxFirestoreState extends State<MobxFirestore> {
     firestore.getFromFirestore();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MobX Counter'),
+        title: const Text('MobX-Firestore'),
         actions: <Widget>[
           Observer(
             builder: (_) {
