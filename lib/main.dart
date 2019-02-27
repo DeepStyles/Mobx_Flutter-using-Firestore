@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:mobx_breathfresh/login.dart';
+import 'package:mobx_breathfresh/firestore.dart';
+import './fullnamemodel.dart';
+
+final Login login = Login();
+final Mobxfirestore firestore = Mobxfirestore();
 
 void main() => runApp(MyApp());
 
@@ -27,10 +32,18 @@ class MyApp extends StatelessWidget {
   }
 }
 
-final Login login = Login();
-
-class CounterExample extends StatelessWidget {
+class CounterExample extends StatefulWidget {
   const CounterExample();
+
+  @override
+  _CounterExampleState createState() => _CounterExampleState();
+}
+
+class _CounterExampleState extends State<CounterExample> {
+  final TextEditingController _firstNamecont = TextEditingController();
+  final TextEditingController _lastNamecont = TextEditingController();
+  String _firstName;
+  String _lastName;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -41,7 +54,7 @@ class CounterExample extends StatelessWidget {
               builder: (_) {
                 return IconButton(
                   icon: const Icon(Icons.account_box),
-                  color: login.updatedLoginStatus ? Colors.green : Colors.red,
+                  color: login.loginStatus.value ? Colors.green : Colors.red,
                   onPressed: () {
                     login.updatedLoginStatus
                         ? login.logoutAccount()
@@ -52,11 +65,86 @@ class CounterExample extends StatelessWidget {
             ),
           ],
         ),
-        body: Center(child: Text('fdsfsf')),
+        body: Column(
+          children: <Widget>[
+            TextField(
+              controller: _firstNamecont,
+              /* onChanged: (val) {
+                  _firstNamecont.text = val;
+                  print('firstName: ${_firstNamecont.text}');
+                */
+            ),
+            TextField(
+              controller: _lastNamecont,
+              /* onChanged: (val) {
+                  _lastNamecont.text = val;
+                  print('lastName: ${_lastNamecont.text}');
+                } */
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            RaisedButton(
+              child: Text('Push to Firestore'),
+              onPressed: () {
+                var fullname =
+                    Fullname(_firstNamecont.text, _lastNamecont.text);
+                firestore.pushToFirestore(fullname);
+
+                print('${_firstNamecont.text}---${_lastNamecont.text}');
+              },
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            FirestoreListView(),
+          ],
+        ),
         floatingActionButton: FloatingActionButton(
-          // onPressed: counter.increment,
+          onPressed: () {
+            firestore.getFromFirestore();
+          },
           tooltip: 'Increment',
           child: const Icon(Icons.add),
         ),
       );
+}
+
+class FirestoreListView extends StatelessWidget {
+  final Widget child;
+
+  FirestoreListView({Key key, this.child}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Observer(
+      builder: (_) {
+        return Flexible(
+          child: ListView.builder(
+            itemCount: firestore.fullNames.value.length,
+            itemBuilder: (context, index) {
+              return Dismissible(
+                key: Key(firestore.fullNames.value[index].documentID),
+                direction: DismissDirection.startToEnd,
+                onDismissed: (direction) {
+                  if (direction == DismissDirection.startToEnd) {
+                    firestore
+                        .delFromFirestore(firestore.fullNames.value[index]);
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ListTile(
+                    title: Text('${firestore.fullNames.value[index].lastName}'),
+                    subtitle:
+                        Text('${firestore.fullNames.value[index].firstName}'),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 }
